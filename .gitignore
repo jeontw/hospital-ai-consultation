@@ -1,0 +1,42 @@
+# =========================
+# Frontend
+# =========================
+consultation-front/node_modules
+consultation-front/dist
+
+# =========================
+# Backend
+# =========================
+consultation/build
+consultation/.gradle
+consultation/target
+
+# =========================
+# IDE
+# =========================
+.idea
+.vscode
+*.iml
+
+# =========================
+# Environment
+# =========================
+.env
+*.env
+
+# =========================
+# Upload files
+# =========================
+consultation/uploads
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Spring Boot
+# =========================
+consultation/HELP.md
+consultation/src/main/resources/application.properties
