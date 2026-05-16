@@ -29,4 +29,8 @@ public class Consultation {
     @JsonIgnoreProperties({"consultations"})
     private Patient patient;
 
+    @OneToOne(mappedBy = "consultation", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"consultation"})
+    private AiAnalysis aiAnalysis;
+
 }

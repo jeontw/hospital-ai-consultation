@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import axios from 'axios'
+
+import { getPatients, createPatient } from './api/patientApi'
+import {
+  getConsultations,
+  getConsultationsByPatient,
+  uploadConsultationAudio,
+  deleteConsultationById,
+  updateConsultationById
+} from './api/consultationApi'
+
+import Dashboard from './components/Dashboard'
+import PatientForm from './components/PatientForm'
+import ConsultationForm from './components/ConsultationForm'
+import PatientList from './components/PatientList'
+import ConsultationDetail from './components/ConsultationDetail'
+import ConsultationList from './components/ConsultationList'
 
 function App() {
   const [patients, setPatients] = useState([])
@@ -13,12 +28,15 @@ function App() {
   const [audioFile, setAudioFile] = useState(null)
   const [selectedViewPatientId, setSelectedViewPatientId] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editText, setEditText] = useState('')
+  const [selectedConsultation, setSelectedConsultation] = useState(null)
 
   const fileInputRef = useRef(null)
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/patients')
+      const response = await getPatients()
       console.log('환자 목록:', response.data)
       setPatients(response.data)
     } catch (error) {
@@ -28,7 +46,7 @@ function App() {
 
   const fetchConsultations = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/consultations')
+      const response = await getConsultations()
       console.log('상담 목록:', response.data)
       setConsultations(response.data)
     } catch (error) {
@@ -39,10 +57,7 @@ function App() {
 
     try {
 
-      const response = await axios.get(
-        `http://localhost:8080/consultations/patient/${patientId}`
-      )
-
+      const response = await getConsultationsByPatient(patientId)
       setConsultations(response.data)
 
     } catch (error) {
@@ -59,7 +74,7 @@ function App() {
 
   const addPatient = async () => {
     try {
-      await axios.post('http://localhost:8080/patients', {
+      await createPatient({
         name,
         phone,
         birth
@@ -93,11 +108,7 @@ function App() {
       const formData = new FormData()
       formData.append('file', audioFile)
 
-      await axios.post(
-        `http://localhost:8080/consultations/upload/${selectedPatientId}`,
-        formData
-      )
-
+      await uploadConsultationAudio(selectedPatientId, formData)
       alert('상담 등록 성공')
 
       setSelectedPatientId('')
@@ -121,10 +132,7 @@ function App() {
     }
 
     try {
-      await axios.delete(
-        `http://localhost:8080/consultations/${consultationId}`
-      )
-
+      await deleteConsultationById(consultationId)
       alert('상담 삭제 완료')
       fetchConsultations()
     } catch (error) {
@@ -132,95 +140,89 @@ function App() {
       alert('상담 삭제 실패')
     }
   }
+  const updateConsultation = async (consultationId) => {
+    try {
+      await updateConsultationById(consultationId, {
+        originalText: editText,
+      })
+
+      alert('상담 수정 완료')
+
+      setEditingId(null)
+      setEditText('')
+
+      fetchConsultations()
+    } catch (error) {
+      console.error('상담 수정 실패:', error)
+      alert('상담 수정 실패')
+    }
+  }
+  const getRiskColor = (riskLevel) => {
+    if (riskLevel === '높음' || riskLevel === 'HIGH') {
+      return 'bg-red-100 text-red-700 border-red-300'
+    }
+
+    if (riskLevel === '주의' || riskLevel === 'MEDIUM') {
+      return 'bg-yellow-100 text-yellow-700 border-yellow-300'
+    }
+
+    if (riskLevel === '낮음' || riskLevel === 'LOW') {
+      return 'bg-green-100 text-green-700 border-green-300'
+    }
+
+    return 'bg-gray-100 text-gray-700 border-gray-300'
+  }
+  const totalPatients = patients.length
+
+  const totalConsultations = consultations.length
+
+  const warningConsultations = consultations.filter(
+    (consultation) => consultation.aiAnalysis?.riskLevel === '주의'
+  ).length
+
+  const recentConsultations = consultations.filter((consultation) => {
+    const createdAt = new Date(consultation.createdAt)
+    const today = new Date()
+
+    const diffTime = today - createdAt
+    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+
+    return diffDays <= 7
+  }).length
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
       <h1 className="text-4xl font-bold mb-8">
         병원 상담 관리 시스템
       </h1>
+      <Dashboard
+        totalPatients={totalPatients}
+        totalConsultations={totalConsultations}
+        warningConsultations={warningConsultations}
+        recentConsultations={recentConsultations}
+      />
 
-      <div className="bg-white rounded-2xl shadow p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4">환자 등록</h2>
+      <PatientForm
+        name={name}
+        phone={phone}
+        birth={birth}
+        setName={setName}
+        setPhone={setPhone}
+        setBirth={setBirth}
+        addPatient={addPatient}
+      />
 
-        <div className="flex gap-3">
-          <input
-            type="text"
-            placeholder="이름"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border p-2 rounded w-full"
-          />
-
-          <input
-            type="text"
-            placeholder="전화번호"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="border p-2 rounded w-full"
-          />
-
-          <input
-            type="date"
-            value={birth}
-            onChange={(e) => setBirth(e.target.value)}
-            className="border p-2 rounded"
-          />
-
-          <button
-            onClick={addPatient}
-            className="bg-blue-500 text-white px-4 rounded"
-          >
-            등록
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow p-6 mb-6">
-        <h2 className="text-2xl font-bold mb-4">상담 등록</h2>
-
-        <div className="flex flex-col gap-3">
-          <select
-            value={selectedPatientId}
-            onChange={(e) => setSelectedPatientId(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="">환자 선택</option>
-
-            {patients.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.name} / {patient.phone}
-              </option>
-            ))}
-          </select>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            onChange={(e) => setAudioFile(e.target.files[0])}
-            className="border p-2 rounded"
-          />
-
-          <button
-            onClick={addConsultation}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            상담 등록
-          </button>
-        </div>
-      </div>
+      <ConsultationForm
+        patients={patients}
+        selectedPatientId={selectedPatientId}
+        setSelectedPatientId={setSelectedPatientId}
+        setAudioFile={setAudioFile}
+        addConsultation={addConsultation}
+        fileInputRef={fileInputRef}
+      />
 
       <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">환자 목록</h2>
-
-          {patients.map((patient) => (
-            <div key={patient.id} className="border-b py-3">
-              <p className="font-semibold">{patient.name}</p>
-              <p className="text-gray-500">{patient.phone}</p>
-            </div>
-          ))}
-        </div>
+        <PatientList patients={patients} />
 
         <select
           value={selectedViewPatientId}
@@ -247,79 +249,24 @@ function App() {
             </option>
           ))}
         </select>
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">상담 목록</h2>
-          <input
-            type="text"
-            placeholder="환자명 또는 상담 내용 검색"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className="border p-2 rounded mb-4 w-full"
-          />
-
-          {consultations.length === 0 && (
-            <p className="text-gray-400">상담 기록이 없습니다.</p>
-          )}
-
-          {[...consultations]
-
-            .filter((consultation) => {
-
-              const patientName =
-                consultation.patient?.name || ''
-
-              const consultationText =
-                consultation.originalText || ''
-
-              return (
-                patientName.includes(searchKeyword) ||
-                consultationText.includes(searchKeyword)
-              )
-            })
-            .sort((a, b) => b.id - a.id)
-            .map((consultation) => (
-              <div key={consultation.id} className="border-b py-4">
-                <p className="font-bold">
-                  {consultation.patient?.name || '환자 정보 없음'}
-                </p>
-                <p className="text-sm text-gray-400">
-                  상담 시간:
-                  {' '}
-                  {new Date(consultation.createdAt).toLocaleString()}
-                </p>
-
-                <p className="mt-2">
-                  {consultation.originalText}
-                </p>
-
-                <p className="mt-2 text-blue-600">
-                  AI 요약: {consultation.summary}
-                </p>
-
-                <p className="mt-2 text-sm text-gray-500">
-                  음성 파일: {consultation.audioPath}
-                </p>
-                <button
-                  onClick={() => deleteConsultation(consultation.id)}
-                  className="mt-3 bg-red-500 text-white px-3 py-1 rounded"
-                >
-                  삭제
-                </button>
-                {consultation.audioPath?.startsWith('/uploads/') && (
-                  <audio
-                    controls
-                    className="mt-2 w-full"
-                  >
-                    <source
-                      src={`http://localhost:8080${consultation.audioPath}`}
-                      type="audio/mpeg"
-                    />
-                  </audio>
-                )}
-              </div>
-            ))}
-        </div>
+        <ConsultationList
+          consultations={consultations}
+          searchKeyword={searchKeyword}
+          setSearchKeyword={setSearchKeyword}
+          editingId={editingId}
+          editText={editText}
+          setEditText={setEditText}
+          updateConsultation={updateConsultation}
+          deleteConsultation={deleteConsultation}
+          setEditingId={setEditingId}
+          setSelectedConsultation={setSelectedConsultation}
+          getRiskColor={getRiskColor}
+        />
       </div>
+      <ConsultationDetail
+        selectedConsultation={selectedConsultation}
+        getRiskColor={getRiskColor}
+      />
     </div>
   )
 }
