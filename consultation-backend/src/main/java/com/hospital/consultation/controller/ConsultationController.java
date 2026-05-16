@@ -140,6 +140,23 @@ public class ConsultationController {
 
         return savedConsultation;
     }
+    // 상담 수정
+    @PutMapping("/{consultationId}")
+    public Consultation updateConsultation(
+            @PathVariable Long consultationId,
+            @RequestBody ConsultationRequestDto requestDto
+    ) {
+        Consultation consultation = consultationRepository.findById(consultationId)
+                .orElseThrow(() -> new RuntimeException("상담을 찾을 수 없습니다."));
+
+        consultation.setOriginalText(requestDto.getOriginalText());
+
+        String summary = "수정된 상담 요약: " + requestDto.getOriginalText();
+
+        consultation.setSummary(summary);
+
+        return consultationRepository.save(consultation);
+    }
     // 상담 삭제
     @Transactional
     @DeleteMapping("/{consultationId}")
