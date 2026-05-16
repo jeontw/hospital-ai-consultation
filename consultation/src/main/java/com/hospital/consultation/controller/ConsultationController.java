@@ -11,6 +11,7 @@ import com.hospital.consultation.service.OpenAiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -138,5 +139,14 @@ public class ConsultationController {
         aiAnalysisRepository.save(aiAnalysis);
 
         return savedConsultation;
+    }
+    // 상담 삭제
+    @Transactional
+    @DeleteMapping("/{consultationId}")
+    public void deleteConsultation(
+            @PathVariable Long consultationId
+    ) {
+        aiAnalysisRepository.deleteByConsultationId(consultationId);
+        consultationRepository.deleteById(consultationId);
     }
 }

@@ -113,6 +113,25 @@ function App() {
       alert('상담 등록 실패')
     }
   }
+  const deleteConsultation = async (consultationId) => {
+    const confirmDelete = confirm('정말 이 상담 기록을 삭제할까요?')
+
+    if (!confirmDelete) {
+      return
+    }
+
+    try {
+      await axios.delete(
+        `http://localhost:8080/consultations/${consultationId}`
+      )
+
+      alert('상담 삭제 완료')
+      fetchConsultations()
+    } catch (error) {
+      console.error('상담 삭제 실패:', error)
+      alert('상담 삭제 실패')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
@@ -280,6 +299,12 @@ function App() {
                 <p className="mt-2 text-sm text-gray-500">
                   음성 파일: {consultation.audioPath}
                 </p>
+                <button
+                  onClick={() => deleteConsultation(consultation.id)}
+                  className="mt-3 bg-red-500 text-white px-3 py-1 rounded"
+                >
+                  삭제
+                </button>
                 {consultation.audioPath?.startsWith('/uploads/') && (
                   <audio
                     controls
