@@ -25,4 +25,29 @@ public class PatientController {
     public List<Patient> getPatients() {
         return patientRepository.findAll();
     }
+
+    @PutMapping("/{patientId}")
+    public Patient updatePatient(
+            @PathVariable Long patientId,
+            @RequestBody Patient requestPatient
+    ) {
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("환자를 찾을 수 없습니다."));
+
+        patient.setName(requestPatient.getName());
+        patient.setPhone(requestPatient.getPhone());
+        patient.setBirth(requestPatient.getBirth());
+
+        return patientRepository.save(patient);
+    }
+    @DeleteMapping("/{patientId}")
+    public void deletePatient(@PathVariable Long patientId) {
+
+        System.out.println("삭제 요청 환자 ID: " + patientId);
+
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("환자를 찾을 수 없습니다."));
+
+        patientRepository.delete(patient);
+    }
 }
