@@ -39,13 +39,17 @@ function ConsultationList({
         })
         .sort((a, b) => b.id - a.id)
         .map((consultation) => (
-          <div key={consultation.id} className="border-b py-4">
+          <div
+            key={consultation.id}
+            className="border-l-4 border-blue-400 pl-4 ml-2 py-4 relative"
+          >
+            <div className="absolute -left-[10px] top-6 w-4 h-4 bg-blue-500 rounded-full"></div>
             <p className="font-bold">
               {consultation.patient?.name || "환자 정보 없음"}
             </p>
 
-            <p className="text-sm text-gray-400">
-              상담 시간: {new Date(consultation.createdAt).toLocaleString()}
+            <p className="text-sm text-gray-400 mb-2">
+              {new Date(consultation.createdAt).toLocaleString()}
             </p>
 
             {editingId === consultation.id ? (

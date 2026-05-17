@@ -4,7 +4,8 @@ function ConsultationForm({
   setSelectedPatientId,
   setAudioFile,
   addConsultation,
-  fileInputRef
+  fileInputRef,
+  isLoading,
 }) {
   return (
     <div className="bg-white rounded-2xl shadow p-6 mb-6">
@@ -35,13 +36,18 @@ function ConsultationForm({
 
         <button
           onClick={addConsultation}
-          className="bg-green-500 text-white px-4 py-2 rounded"
+          disabled={isLoading}
+          className={`px-4 py-2 rounded text-white transition ${
+            isLoading
+              ? "bg-gray-400 cursor-not-allowed animate-pulse"
+              : "bg-blue-500 hover:bg-blue-600"
+          }`}
         >
-          상담 등록
+          {isLoading ? "AI 분석 중..." : "상담 등록"}
         </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default ConsultationForm
+export default ConsultationForm;

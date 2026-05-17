@@ -20,6 +20,7 @@ import ConsultationForm from "./components/ConsultationForm";
 import PatientList from "./components/PatientList";
 import ConsultationDetail from "./components/ConsultationDetail";
 import ConsultationList from "./components/ConsultationList";
+import PatientInsight from "./components/PatientInsight";
 
 function App() {
   const [patients, setPatients] = useState([]);
@@ -36,6 +37,8 @@ function App() {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
   const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -135,6 +138,7 @@ function App() {
     }
   };
   const addConsultation = async () => {
+    setIsLoading(true);
     if (!selectedPatientId) {
       alert("환자를 선택하세요");
       return;
@@ -163,6 +167,8 @@ function App() {
     } catch (error) {
       console.error("상담 등록 실패:", error);
       alert("상담 등록 실패");
+    } finally {
+      setIsLoading(false);
     }
   };
   const deleteConsultation = async (consultationId) => {
@@ -258,6 +264,7 @@ function App() {
         setAudioFile={setAudioFile}
         addConsultation={addConsultation}
         fileInputRef={fileInputRef}
+        isLoading={isLoading}
       />
 
       <div className="grid grid-cols-2 gap-6">
@@ -267,6 +274,13 @@ function App() {
             selectedViewPatientId={selectedViewPatientId}
             onSelectPatient={(patientId) => {
               setSelectedViewPatientId(patientId);
+              setSelectedConsultation(null);
+
+              const patient = patients.find(
+                (patient) => String(patient.id) === String(patientId),
+              );
+
+              setSelectedPatient(patient || null);
 
               if (patientId === "") {
                 fetchConsultations();
@@ -284,6 +298,13 @@ function App() {
               const patientId = e.target.value;
 
               setSelectedViewPatientId(patientId);
+              setSelectedConsultation(null);
+
+              const patient = patients.find(
+                (patient) => String(patient.id) === String(patientId),
+              );
+
+              setSelectedPatient(patient || null);
 
               if (patientId === "") {
                 fetchConsultations();
@@ -317,10 +338,20 @@ function App() {
           />
         </div>
 
-        <ConsultationDetail
-          selectedConsultation={selectedConsultation}
-          getRiskColor={getRiskColor}
-        />
+        <div>
+          <PatientInsight
+            selectedPatient={selectedPatient}
+            consultations={consultations}
+            getRiskColor={getRiskColor}
+          />
+
+          <div className="mt-6">
+            <ConsultationDetail
+              selectedConsultation={selectedConsultation}
+              getRiskColor={getRiskColor}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
