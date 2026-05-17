@@ -1,200 +1,239 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from "react";
 
-import { getPatients, createPatient } from './api/patientApi'
+import {
+  getPatients,
+  createPatient,
+  deletePatientById,
+  updatePatientById,
+} from "./api/patientApi";
 import {
   getConsultations,
   getConsultationsByPatient,
   uploadConsultationAudio,
   deleteConsultationById,
-  updateConsultationById
-} from './api/consultationApi'
+  updateConsultationById,
+} from "./api/consultationApi";
 
-import Dashboard from './components/Dashboard'
-import PatientForm from './components/PatientForm'
-import ConsultationForm from './components/ConsultationForm'
-import PatientList from './components/PatientList'
-import ConsultationDetail from './components/ConsultationDetail'
-import ConsultationList from './components/ConsultationList'
+import Dashboard from "./components/Dashboard";
+import PatientForm from "./components/PatientForm";
+import ConsultationForm from "./components/ConsultationForm";
+import PatientList from "./components/PatientList";
+import ConsultationDetail from "./components/ConsultationDetail";
+import ConsultationList from "./components/ConsultationList";
 
 function App() {
-  const [patients, setPatients] = useState([])
-  const [consultations, setConsultations] = useState([])
+  const [patients, setPatients] = useState([]);
+  const [consultations, setConsultations] = useState([]);
 
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [birth, setBirth] = useState('')
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birth, setBirth] = useState("");
 
-  const [selectedPatientId, setSelectedPatientId] = useState('')
-  const [audioFile, setAudioFile] = useState(null)
-  const [selectedViewPatientId, setSelectedViewPatientId] = useState('')
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [editingId, setEditingId] = useState(null)
-  const [editText, setEditText] = useState('')
-  const [selectedConsultation, setSelectedConsultation] = useState(null)
+  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [audioFile, setAudioFile] = useState(null);
+  const [selectedViewPatientId, setSelectedViewPatientId] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
 
-  const fileInputRef = useRef(null)
+  const fileInputRef = useRef(null);
 
   const fetchPatients = async () => {
     try {
-      const response = await getPatients()
-      console.log('환자 목록:', response.data)
-      setPatients(response.data)
+      const response = await getPatients();
+      console.log("환자 목록:", response.data);
+      setPatients(response.data);
     } catch (error) {
-      console.error('환자 조회 실패:', error)
+      console.error("환자 조회 실패:", error);
     }
-  }
+  };
 
   const fetchConsultations = async () => {
     try {
-      const response = await getConsultations()
-      console.log('상담 목록:', response.data)
-      setConsultations(response.data)
+      const response = await getConsultations();
+      console.log("상담 목록:", response.data);
+      setConsultations(response.data);
     } catch (error) {
-      console.error('상담 조회 실패:', error)
+      console.error("상담 조회 실패:", error);
     }
-  }
+  };
   const fetchPatientConsultations = async (patientId) => {
-
     try {
-
-      const response = await getConsultationsByPatient(patientId)
-      setConsultations(response.data)
-
+      const response = await getConsultationsByPatient(patientId);
+      setConsultations(response.data);
     } catch (error) {
-
-      console.error('환자 상담 조회 실패:', error)
-
+      console.error("환자 상담 조회 실패:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchPatients()
-    fetchConsultations()
-  }, [])
+    fetchPatients();
+    fetchConsultations();
+  }, []);
 
   const addPatient = async () => {
     try {
       await createPatient({
         name,
         phone,
-        birth
-      })
+        birth,
+      });
 
-      alert('환자 등록 성공')
+      alert("환자 등록 성공");
 
-      setName('')
-      setPhone('')
-      setBirth('')
+      setName("");
+      setPhone("");
+      setBirth("");
 
-      fetchPatients()
+      fetchPatients();
     } catch (error) {
-      console.error('환자 등록 실패:', error)
-      alert('환자 등록 실패')
+      console.error("환자 등록 실패:", error);
+      alert("환자 등록 실패");
     }
-  }
+  };
+  const deletePatient = async (patientId) => {
+    console.log("App에서 받은 환자 ID:", patientId);
 
+    if (!patientId) {
+      alert("삭제할 환자 ID가 없습니다.");
+      return;
+    }
+
+    const confirmDelete = confirm(`정말 ${patientId}번 환자를 삭제할까요?`);
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await deletePatientById(patientId);
+      alert("환자 삭제 완료");
+
+      setSelectedViewPatientId("");
+      setSelectedConsultation(null);
+
+      fetchPatients();
+      fetchConsultations();
+    } catch (error) {
+      console.error("환자 삭제 실패:", error);
+      alert(
+        "상담 기록이 있는 환자는 삭제할 수 없습니다. 환자 정보 수정 기능을 사용하세요.",
+      );
+    }
+  };
+  const updatePatient = async (patientId, updatedPatient) => {
+    try {
+      await updatePatientById(patientId, updatedPatient);
+
+      alert("환자 정보 수정 완료");
+
+      fetchPatients();
+    } catch (error) {
+      console.error("환자 수정 실패:", error);
+      alert("환자 수정 실패");
+    }
+  };
   const addConsultation = async () => {
     if (!selectedPatientId) {
-      alert('환자를 선택하세요')
-      return
+      alert("환자를 선택하세요");
+      return;
     }
 
     if (!audioFile) {
-      alert('음성 파일을 선택하세요')
-      return
+      alert("음성 파일을 선택하세요");
+      return;
     }
 
     try {
-      const formData = new FormData()
-      formData.append('file', audioFile)
+      const formData = new FormData();
+      formData.append("file", audioFile);
 
-      await uploadConsultationAudio(selectedPatientId, formData)
-      alert('상담 등록 성공')
+      await uploadConsultationAudio(selectedPatientId, formData);
+      alert("상담 등록 성공");
 
-      setSelectedPatientId('')
-      setAudioFile(null)
+      setSelectedPatientId("");
+      setAudioFile(null);
 
       if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+        fileInputRef.current.value = "";
       }
 
-      fetchConsultations()
+      fetchConsultations();
     } catch (error) {
-      console.error('상담 등록 실패:', error)
-      alert('상담 등록 실패')
+      console.error("상담 등록 실패:", error);
+      alert("상담 등록 실패");
     }
-  }
+  };
   const deleteConsultation = async (consultationId) => {
-    const confirmDelete = confirm('정말 이 상담 기록을 삭제할까요?')
+    const confirmDelete = confirm("정말 이 상담 기록을 삭제할까요?");
 
     if (!confirmDelete) {
-      return
+      return;
     }
 
     try {
-      await deleteConsultationById(consultationId)
-      alert('상담 삭제 완료')
-      fetchConsultations()
+      await deleteConsultationById(consultationId);
+      alert("상담 삭제 완료");
+      fetchConsultations();
     } catch (error) {
-      console.error('상담 삭제 실패:', error)
-      alert('상담 삭제 실패')
+      console.error("상담 삭제 실패:", error);
+      alert("상담 삭제 실패");
     }
-  }
+  };
   const updateConsultation = async (consultationId) => {
     try {
       await updateConsultationById(consultationId, {
         originalText: editText,
-      })
+      });
 
-      alert('상담 수정 완료')
+      alert("상담 수정 완료");
 
-      setEditingId(null)
-      setEditText('')
+      setEditingId(null);
+      setEditText("");
 
-      fetchConsultations()
+      fetchConsultations();
     } catch (error) {
-      console.error('상담 수정 실패:', error)
-      alert('상담 수정 실패')
+      console.error("상담 수정 실패:", error);
+      alert("상담 수정 실패");
     }
-  }
+  };
   const getRiskColor = (riskLevel) => {
-    if (riskLevel === '높음' || riskLevel === 'HIGH') {
-      return 'bg-red-100 text-red-700 border-red-300'
+    if (riskLevel === "높음" || riskLevel === "HIGH") {
+      return "bg-red-100 text-red-700 border-red-300";
     }
 
-    if (riskLevel === '주의' || riskLevel === 'MEDIUM') {
-      return 'bg-yellow-100 text-yellow-700 border-yellow-300'
+    if (riskLevel === "주의" || riskLevel === "MEDIUM") {
+      return "bg-yellow-100 text-yellow-700 border-yellow-300";
     }
 
-    if (riskLevel === '낮음' || riskLevel === 'LOW') {
-      return 'bg-green-100 text-green-700 border-green-300'
+    if (riskLevel === "낮음" || riskLevel === "LOW") {
+      return "bg-green-100 text-green-700 border-green-300";
     }
 
-    return 'bg-gray-100 text-gray-700 border-gray-300'
-  }
-  const totalPatients = patients.length
+    return "bg-gray-100 text-gray-700 border-gray-300";
+  };
+  const totalPatients = patients.length;
 
-  const totalConsultations = consultations.length
+  const totalConsultations = consultations.length;
 
   const warningConsultations = consultations.filter(
-    (consultation) => consultation.aiAnalysis?.riskLevel === '주의'
-  ).length
+    (consultation) => consultation.aiAnalysis?.riskLevel === "주의",
+  ).length;
 
   const recentConsultations = consultations.filter((consultation) => {
-    const createdAt = new Date(consultation.createdAt)
-    const today = new Date()
+    const createdAt = new Date(consultation.createdAt);
+    const today = new Date();
 
-    const diffTime = today - createdAt
-    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+    const diffTime = today - createdAt;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-    return diffDays <= 7
-  }).length
+    return diffDays <= 7;
+  }).length;
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
-      <h1 className="text-4xl font-bold mb-8">
-        병원 상담 관리 시스템
-      </h1>
+      <h1 className="text-4xl font-bold mb-8">병원 상담 관리 시스템</h1>
       <Dashboard
         totalPatients={totalPatients}
         totalConsultations={totalConsultations}
@@ -223,19 +262,33 @@ function App() {
 
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <PatientList patients={patients} />
+          <PatientList
+            patients={patients}
+            selectedViewPatientId={selectedViewPatientId}
+            onSelectPatient={(patientId) => {
+              setSelectedViewPatientId(patientId);
+
+              if (patientId === "") {
+                fetchConsultations();
+              } else {
+                fetchPatientConsultations(patientId);
+              }
+            }}
+            deletePatient={deletePatient}
+            updatePatient={updatePatient}
+          />
 
           <select
             value={selectedViewPatientId}
             onChange={(e) => {
-              const patientId = e.target.value
+              const patientId = e.target.value;
 
-              setSelectedViewPatientId(patientId)
+              setSelectedViewPatientId(patientId);
 
-              if (patientId === '') {
-                fetchConsultations()
+              if (patientId === "") {
+                fetchConsultations();
               } else {
-                fetchPatientConsultations(patientId)
+                fetchPatientConsultations(patientId);
               }
             }}
             className="border p-2 rounded mb-4 w-full"
@@ -270,7 +323,7 @@ function App() {
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

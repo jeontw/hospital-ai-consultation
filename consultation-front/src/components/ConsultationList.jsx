@@ -9,7 +9,7 @@ function ConsultationList({
   deleteConsultation,
   setEditingId,
   setSelectedConsultation,
-  getRiskColor
+  getRiskColor,
 }) {
   return (
     <div className="bg-white rounded-2xl shadow p-6">
@@ -29,19 +29,19 @@ function ConsultationList({
 
       {[...consultations]
         .filter((consultation) => {
-          const patientName = consultation.patient?.name || ''
-          const consultationText = consultation.originalText || ''
+          const patientName = consultation.patient?.name || "";
+          const consultationText = consultation.originalText || "";
 
           return (
             patientName.includes(searchKeyword) ||
             consultationText.includes(searchKeyword)
-          )
+          );
         })
         .sort((a, b) => b.id - a.id)
         .map((consultation) => (
           <div key={consultation.id} className="border-b py-4">
             <p className="font-bold">
-              {consultation.patient?.name || '환자 정보 없음'}
+              {consultation.patient?.name || "환자 정보 없음"}
             </p>
 
             <p className="text-sm text-gray-400">
@@ -72,10 +72,11 @@ function ConsultationList({
             </p>
 
             <span
-              className={`mt-2 inline-block rounded-full border px-3 py-1 text-sm font-bold ${getRiskColor(consultation.aiAnalysis?.riskLevel)
-                }`}
+              className={`mt-2 inline-block rounded-full border px-3 py-1 text-sm font-bold ${getRiskColor(
+                consultation.aiAnalysis?.riskLevel,
+              )}`}
             >
-              위험도: {consultation.aiAnalysis?.riskLevel || '분석 없음'}
+              위험도: {consultation.aiAnalysis?.riskLevel || "분석 없음"}
             </span>
 
             <p className="mt-2 text-sm text-gray-500">
@@ -98,26 +99,26 @@ function ConsultationList({
 
             <button
               onClick={() => {
-                setEditingId(consultation.id)
-                setEditText(consultation.originalText)
+                setEditingId(consultation.id);
+                setEditText(consultation.originalText);
               }}
               className="mt-3 ml-2 bg-yellow-500 text-white px-3 py-1 rounded"
             >
               수정
             </button>
 
-            {consultation.audioPath?.startsWith('/uploads/') && (
+            {consultation.audioPath?.startsWith("/uploads/") && (
               <audio
                 key={consultation.audioPath}
                 controls
                 className="mt-2 w-full"
-                src={encodeURI(`http://localhost:8080${consultation.audioPath}`)}
+                src={`http://localhost:8080${consultation.audioPath}`}
               />
             )}
           </div>
         ))}
     </div>
-  )
+  );
 }
 
-export default ConsultationList
+export default ConsultationList;
