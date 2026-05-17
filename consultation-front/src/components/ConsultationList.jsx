@@ -72,9 +72,8 @@ function ConsultationList({
             </p>
 
             <span
-              className={`mt-2 inline-block rounded-full border px-3 py-1 text-sm font-bold ${
-                getRiskColor(consultation.aiAnalysis?.riskLevel)
-              }`}
+              className={`mt-2 inline-block rounded-full border px-3 py-1 text-sm font-bold ${getRiskColor(consultation.aiAnalysis?.riskLevel)
+                }`}
             >
               위험도: {consultation.aiAnalysis?.riskLevel || '분석 없음'}
             </span>
@@ -108,12 +107,12 @@ function ConsultationList({
             </button>
 
             {consultation.audioPath?.startsWith('/uploads/') && (
-              <audio controls className="mt-2 w-full">
-                <source
-                  src={`http://localhost:8080${consultation.audioPath}`}
-                  type="audio/mpeg"
-                />
-              </audio>
+              <audio
+                key={consultation.audioPath}
+                controls
+                className="mt-2 w-full"
+                src={encodeURI(`http://localhost:8080${consultation.audioPath}`)}
+              />
             )}
           </div>
         ))}

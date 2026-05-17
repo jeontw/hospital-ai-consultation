@@ -222,51 +222,53 @@ function App() {
       />
 
       <div className="grid grid-cols-2 gap-6">
-        <PatientList patients={patients} />
+        <div>
+          <PatientList patients={patients} />
 
-        <select
-          value={selectedViewPatientId}
-          onChange={(e) => {
+          <select
+            value={selectedViewPatientId}
+            onChange={(e) => {
+              const patientId = e.target.value
 
-            const patientId = e.target.value
+              setSelectedViewPatientId(patientId)
 
-            setSelectedViewPatientId(patientId)
+              if (patientId === '') {
+                fetchConsultations()
+              } else {
+                fetchPatientConsultations(patientId)
+              }
+            }}
+            className="border p-2 rounded mb-4 w-full"
+          >
+            <option value="">전체 상담 보기</option>
 
-            if (patientId === '') {
-              fetchConsultations()
-            } else {
-              fetchPatientConsultations(patientId)
-            }
+            {patients.map((patient) => (
+              <option key={patient.id} value={patient.id}>
+                {patient.name}
+              </option>
+            ))}
+          </select>
 
-          }}
-          className="border p-2 rounded mb-4 w-full"
-        >
-          <option value="">전체 상담 보기</option>
+          <ConsultationList
+            consultations={consultations}
+            searchKeyword={searchKeyword}
+            setSearchKeyword={setSearchKeyword}
+            editingId={editingId}
+            editText={editText}
+            setEditText={setEditText}
+            updateConsultation={updateConsultation}
+            deleteConsultation={deleteConsultation}
+            setEditingId={setEditingId}
+            setSelectedConsultation={setSelectedConsultation}
+            getRiskColor={getRiskColor}
+          />
+        </div>
 
-          {patients.map((patient) => (
-            <option key={patient.id} value={patient.id}>
-              {patient.name}
-            </option>
-          ))}
-        </select>
-        <ConsultationList
-          consultations={consultations}
-          searchKeyword={searchKeyword}
-          setSearchKeyword={setSearchKeyword}
-          editingId={editingId}
-          editText={editText}
-          setEditText={setEditText}
-          updateConsultation={updateConsultation}
-          deleteConsultation={deleteConsultation}
-          setEditingId={setEditingId}
-          setSelectedConsultation={setSelectedConsultation}
+        <ConsultationDetail
+          selectedConsultation={selectedConsultation}
           getRiskColor={getRiskColor}
         />
       </div>
-      <ConsultationDetail
-        selectedConsultation={selectedConsultation}
-        getRiskColor={getRiskColor}
-      />
     </div>
   )
 }
